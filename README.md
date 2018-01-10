@@ -14,8 +14,11 @@ This is a Blender addon to export motion control movement paths from Blender to 
 * To get an object to rotate with a pan/tilt/roll or heading/attitude/bank style, use the YXZ Euler rotation mode.
 * It can be very useful to parent referenced objects to other objects, so that the position being recorded is with respect to the parent object's origin, not the global origin. For example, parenting a slider block to a slider allows the slider to be positioned in any location and orientation in space, but the position of the slider block remains a relevant value that can be used for moco export. This is demonstrated in the example file.
 
-**Known issues/future work**
+**Known issues**
 
 * There is an occasional issue in which an axis position does not update from the previous frame, yielding a "flat spot" of two identical position values in the Dragonframe export. If this happens, try exporting again or try restarting blender.
+
+**Future work**
+
 * Support for a focus axis that works for both digital lenses and geared lenses.
 * Support for .arcmov XML export so the curves can be further modified once in Dragonframe.
