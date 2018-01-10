@@ -6,7 +6,7 @@ This is a Blender addon to export motion control movement paths from Blender to 
 **How to use**
 
 * To run the addon, open File -> User Preferences -> Addons -> Install Add-on from file -> Select the MoCoExportAddon.py file.
-* Click "Add New MoCo Axis" to add a new axis. Each axis can be named for your reference. The addon panel appears in the tools panel in a "Moco Export" tab when in object mode.
+* Click "Add New MoCo Axis" to add a new axis. Each axis can be named for your reference. The addon panel appears in the tools panel of the 3D view in a "Moco Export" tab when in object mode.
 * Select the object and component in the axis box. LX/LY/LZ are position components and RX/RY/RZ are rotation components.
 * Axes can be organized by moving them up and down. The order they apear in will be order exported for Dragonframe.
 * To animate the axes, animate the position values in the tool panel, do not animate the location and rotation values for the actual referenced object.
