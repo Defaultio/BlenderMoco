@@ -1,5 +1,5 @@
 # BlenderMoco
-This is a Blender addon to export motion control movement paths from Blender to Dragonframe. This allows a scene to be animated and previsualized in Blender, then finally executed in Dragonframe. Up to 32 axes of motion can be added. The value that is exported for each axis is determined by a reference to some object in the Blender scene and the relevent component of the object's position: position X/Y/Z or rotation X/Y/Z.
+This is a Blender addon to export motion control movement paths from Blender to Dragonframe. This allows a scene to be animated and previsualized in Blender, then finally executed in Dragonframe. Up to 32 axes of motion can be added. The value that is exported for each axis is determined by a reference to some object in the Blender scene and the relevent component of the object's position: location X/Y/Z or rotation X/Y/Z.
 
 ![alt text](Screenshots/ToolPanel.png)
 
