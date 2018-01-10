@@ -10,6 +10,7 @@ This is a Blender addon to export motion control movement paths from Blender to 
 * Select the object and component in the axis box. LX/LY/LZ are position components and RX/RY/RZ are rotation components.
 * Axes can be organized by moving them up and down. The order they apear in will be order exported for Dragonframe.
 * To animate the axes, animate the position values in the tool panel, do not animate the location and rotation values for the actual referenced object.
+* To export, enter a filename and click the export button. The file will be saved to the same directory as the Blender project. In the Dragonframe motion control workspace, import as a Raw Move file.
 
 **Tips**
 
