@@ -14,6 +14,7 @@ This is a Blender addon to export motion control movement paths from Blender to 
 **Tips**
 
 * To get an object to rotate with a pan/tilt/roll or heading/attitude/bank style, use the YXZ Euler rotation mode.
+* The units of distance will match the units settings in the Blender scene. Be sure to match your Blender scene units to the units you want to use for your axes in Dragonframe.
 * It can be very useful to parent referenced objects to other objects, so that the position being recorded is with respect to the parent object's origin, not the global origin. For example, parenting a slider block to a slider allows the slider to be positioned in any location and orientation in space, but the position of the slider block remains a relevant value that can be used for moco export. This is demonstrated in the example file.
 
 **Known issues**
