@@ -21,7 +21,7 @@ This is a Blender addon to export motion control movement paths from Blender to 
 
 **Known issues**
 
-* There is an occasional issue in which an axis position does not update from the previous frame, yielding a "flat spot" of two identical position values in the Dragonframe export. If this happens, try exporting again or try restarting blender.
+* For Raw Move export, there is an occasional issue in which an axis position does not update from the previous frame, yielding a "flat spot" of two identical position values in the Dragonframe export. If this happens, try exporting again or try restarting blender.
 
 **Future work**
 
