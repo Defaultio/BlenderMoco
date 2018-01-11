@@ -3,6 +3,7 @@ import bmesh
 import math
 from bpy.types import Panel, Operator
 from mathutils import Vector
+from xml.etree import ElementTree as ET
 
 maxAxisCount = 36
 removeOperators = []
@@ -14,7 +15,11 @@ updatingAxisPositions = False
 exportingCameraMovement = False
 
 
-# Export movement function
+# Export movement functions
+
+
+
+
 class ExportMovement(Operator):
     bl_idname = 'moco.exportmovement'
     bl_label = 'Export camera movement for Dragonframe'
@@ -22,7 +27,17 @@ class ExportMovement(Operator):
     positions = []
     numFrames = 0
     
-    def writeFile(self):
+    def saveFile(self, fileString, extension):
+        bpy.ops.wm.context_set_string(data_path="area.type", value="TEXT_EDITOR")
+        bpy.ops.text.new()
+        bpy.ops.text.insert(text = fileString)
+        bpy.ops.text.save_as(filepath = "//" + props.camera_path_file_name + extension)
+        bpy.ops.text.unlink()
+        bpy.ops.wm.context_set_string(data_path="area.type", value="VIEW_3D")
+    
+    
+    # Raw export
+    def writeRaw(self):
         rawMove = ""
         
         for frame in range(self.numFrames):
@@ -35,23 +50,15 @@ class ExportMovement(Operator):
                 rawMove = rawMove + entry[:12] + "    "
             rawMove = rawMove + "\n"
         
-        bpy.ops.wm.context_set_string(data_path="area.type", value="TEXT_EDITOR")
-        bpy.ops.text.new()
-        bpy.ops.text.insert(text = rawMove)
-        bpy.ops.text.save_as(filepath = "//" + props.camera_path_file_name)
-        bpy.ops.text.unlink()
-        self.report({'INFO'}, "Camera movement exported to " + bpy.path.abspath("//") + props.camera_path_file_name) 
-        
-        bpy.ops.wm.context_set_string(data_path="area.type", value="VIEW_3D")
+        self.saveFile(rawMove, '.txt')
+        self.report({'INFO'}, "Camera movement exported as Raw Move to " + bpy.path.abspath("//") + props.camera_path_file_name + '.txt') 
     
-    
-     # Modal is called during execution
     def modal(self, context, event):
         global exportingCameraMovement
         
         if event.type == 'TIMER':
             if context.scene.frame_current >= context.scene.frame_end:
-                self.writeFile()
+                self.writeRaw()
                 exportingCameraMovement = False
                 return {'FINISHED'}
             
@@ -67,26 +74,95 @@ class ExportMovement(Operator):
             self.numFrames += 1
         
         return {'PASS_THROUGH'}
+
+
+    # XML Export
+    def exportXML(self, context):
+        root = ET.Element('scen:scene')
+        root.set('xmlns:scen', 'http://caliri.com/motion/scene')
+        root.set('endframe', str(context.scene.frame_end - context.scene.frame_start))
+        
+        for axisIndex in range(props.moco_num_axis):
+            keyframes = getAxisKeyframes(axisIndex)
+            label = getAxisLabel(axisIndex)
+            component = getAxisComponent(axisIndex)
+            numKeyframes = len(keyframes)
+            
+            axis = ET.SubElement(root, 'scen:axis')
+            axis.set('name', label)
+            
+            units = None
+            if component == 0 or component == 1 or component == 2:
+                unitSystem = context.scene.unit_settings.system 
+                scaleLen = context.scene.unit_settings.scale_length
+                if unitSystem == 'METRIC':
+                    if abs(scaleLen - 1) < 0.00001:
+                        units = 'm'
+                    elif abs(scaleLen - 0.01) < 0.00001:
+                        units = 'cm'
+                    elif abs(scaleLen - 0.001) < 0.00001:
+                        units = 'mm'
+                elif unitSystem == 'IMPERIAL':
+                    if abs(scaleLen - 1) < 0.00001:
+                        units = 'in'
+            elif component == 3 or component == 4 or component == 5:
+                unitSystem = context.scene.unit_settings.system_rotation
+                if unitSystem == 'DEGREES':
+                    units = 'deg'
+            
+            if not (units is None):
+                axis.set('units', units)
+            
+            yMult = 1
+            if component == 3 or component == 4 or component == 5:
+                yMult = 180 / math.pi
+            
+            for index, keyframe in enumerate(keyframes):
+                point = ET.SubElement(axis, 'scen:points')
+                point.set('y', str(keyframe.co[1] * yMult))
+                point.set('x', str(keyframe.co[0]))
+            
+            for index, keyframe in enumerate(keyframes):
+                if index > 0:
+                    controlpoint = ET.SubElement(axis, 'scen:controlPoints')
+                    controlpoint.set('y', str(keyframe.handle_left[1] * yMult))
+                    controlpoint.set('x', str(keyframe.handle_left[0]))
+                if index < numKeyframes - 1:
+                    controlpoint = ET.SubElement(axis, 'scen:controlPoints')
+                    controlpoint.set('y', str(keyframe.handle_right[1] * yMult))
+                    controlpoint.set('x', str(keyframe.handle_right[0]))
+            
+        self.saveFile(str(ET.tostring(root))[2:-1], '.arcm')
+        self.report({'INFO'}, "Camera movement exported as Arc Move XML to " + bpy.path.abspath("//") + props.camera_path_file_name + '.arcm') 
+        
     
-    
+    # Export button
     def execute(self, context):
         global exportingCameraMovement
         exportingCameraMovement = True
         
-        bpy.ops.screen.animation_cancel(restore_frame = False)
-        bpy.ops.screen.frame_jump(end = False)
-        
-        self.positions = []
-        self.numFrames = 0
-        
-        for axis in range(props.moco_num_axis):
-            self.positions.append([])
+        if props.moco_export_type == '0':
+            bpy.ops.screen.animation_cancel(restore_frame = False)
+            bpy.ops.screen.frame_jump(end = False)
             
-        wm = context.window_manager
-        self._timer = wm.event_timer_add(0.05, context.window)
-        wm.modal_handler_add(self)
+            self.positions = []
+            self.numFrames = 0
+            
+            for axis in range(props.moco_num_axis):
+                self.positions.append([])
+                
+            wm = context.window_manager
+            self._timer = wm.event_timer_add(0.05, context.window)
+            wm.modal_handler_add(self)
+            
+            return {'RUNNING_MODAL'}
         
-        return {'RUNNING_MODAL'}
+        
+        elif props.moco_export_type == '1':
+            self.exportXML(context)
+            exportingCameraMovement = False
+            
+            return {'FINISHED'}
 
     def cancel(self, context):
         global exportingCameraMovement
@@ -96,7 +172,6 @@ class ExportMovement(Operator):
         wm.event_timer_remove(self._timer)
         
         
-
 # Axis utilities
 def getAxisObject(axisIndex):
     global props
@@ -108,6 +183,28 @@ def getAxisObject(axisIndex):
 def getAxisComponent(axisIndex):
     global props
     return int(getattr(props, "moco_axis_component_" + str(axisIndex)))
+
+
+def getAxisLabel(axisIndex):
+    global props
+    return getattr(props, "moco_axis_label_" + str(axisIndex))
+
+
+def getAxisKeyframes(axisIndex):
+    global props
+    if not (props.animation_data is None):
+        component = getAxisComponent(axisIndex)
+        pathName = None
+        if component == 0 or component == 1 or component == 2:
+            pathName = 'moco_axis_setlength_'
+        elif component == 3 or component == 4 or component == 5:
+            pathName = 'moco_axis_setrot_'
+        
+        for fcurve in props.animation_data.action.fcurves:
+            if fcurve.data_path == pathName + str(axisIndex):
+                return fcurve.keyframe_points
+            elif fcurve.data_path == pathName + str(axisIndex):
+                return fcurve.keyframe_points
         
 
 def getAxisObjectPosition(axisIndex):
@@ -307,6 +404,8 @@ class View3dPanel(Panel):
     # Custom parameters for moco pos, filepath, num axis in use
     bpy.types.Scene.camera_path_file_name = bpy.props.StringProperty(name="Filename", description = "Filename for Dragonframe raw move file. Will be exported to Blender file directory.", default = "CameraMovement.txt")
     
+    bpy.types.Scene.moco_export_type = bpy.props.EnumProperty(items = (('0', 'Raw Move', ''), ('1', 'Arc Move', '')), name ="File Type", description = "Type of file to export. Raw Move exports axis positions for each frame, Arc Move exports raw keyframe curves. Arc Move can be edited in Dragonframe, but require axis setup after import. For Arc Move, there be slight discrepencies between how Blender and Dragonframe interpolate between keyframes.")
+    
     bpy.types.Scene.moco_num_axis = bpy.props.IntProperty()
     
     # Custom parameters for each axis slot: component, object string, position
@@ -317,7 +416,7 @@ class View3dPanel(Panel):
         updateObjectPositions()
 
     for i in range(maxAxisCount):
-        label = bpy.props.StringProperty(name = "Axis " + str(i), description = "Label for user reference.")
+        label = bpy.props.StringProperty(name = "Axis " + str(i), description = "Label for user reference. Also included in .arcm XML exports.")
         componentProp = bpy.props.EnumProperty(items = axisCompnentItems, name ="Component", description = "Relevent component of movement.", default = str(i % 6))
         objectProp = bpy.props.StringProperty(name ="Object", description = "Object that represents relevent motion.")
         setAxisLengthProp = bpy.props.FloatProperty(name="Pos " + str(i), description = "Set axis position. Animate this value, not the object directly.", unit = 'LENGTH', update = update)
@@ -401,7 +500,10 @@ class View3dPanel(Panel):
         row = layout.row()
         row.prop(props, "camera_path_file_name")
         row = layout.row()
+        row.prop(props, "moco_export_type")
+        row = layout.row()
         row.scale_y = 2.0
+        
         row.operator('moco.exportmovement', text = 'Export Movement', icon = 'CAMERA_DATA')
         row.enabled = not exportingCameraMovement
     
