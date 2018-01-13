@@ -26,3 +26,4 @@ This is a Blender addon to export motion control movement paths from Blender to 
 **Future work**
 
 * Support for a focus axis that works for both digital lenses and geared lenses.
+* Support for lighting export, probably as a similarly structured but seperate addon, since lighting programs are imported in Dragonframe as a seperate file, .dfxp. 
