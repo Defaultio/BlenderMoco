@@ -1,3 +1,10 @@
+bl_info = {
+    "name": "Motion Control Export Tool",
+    "author": "Josh Sheldon",
+    "category": "Import-Export",
+    "blender": (2, 7, 9)    
+}
+
 import bpy
 import bmesh
 import math
@@ -245,7 +252,7 @@ def getAxisInputPosition(axisIndex):
 def swapAxisFCurves(axisIndex1, axisIndex2):
     global props
     
-    if not (props.animation_data is None):
+    if not (props.animation_data is None) and not (props.animation_data.action is None):
         for fcurve in props.animation_data.action.fcurves:
             for pathName in ['moco_axis_setlength_', 'moco_axis_setrot_']:
                 if fcurve.data_path == pathName + str(axisIndex1):
@@ -350,6 +357,9 @@ def updateObjectPositions():
     if updatingAxisPositions:
         return
     
+    if not ("moco_num_axis" in props):
+        return
+    
     for i in range(props.moco_num_axis):
         object = getAxisObject(i)
 
@@ -387,6 +397,8 @@ def updatePositionInputs():
 
 # Update object positions to reflect keyframed position inputs during animation playback
 def animationUpdate(scene):
+    global props
+    props = scene
     updateObjectPositions()
     bpy.context.scene.update()
 
@@ -402,10 +414,8 @@ class View3dPanel(Panel):
     global maxAxisCount, setAxisLength, setAxisRotation
     
     # Custom parameters for moco pos, filepath, num axis in use
-    bpy.types.Scene.camera_path_file_name = bpy.props.StringProperty(name="Filename", description = "Filename for Dragonframe raw move file. Will be exported to Blender file directory.", default = "CameraMovement.txt")
-    
-    bpy.types.Scene.moco_export_type = bpy.props.EnumProperty(items = (('0', 'Raw Move', ''), ('1', 'Arc Move', '')), name ="File Type", description = "Type of file to export. Raw Move exports axis positions for each frame, Arc Move exports raw keyframe curves. Arc Move can be edited in Dragonframe, but require axis setup after import. For Arc Move, there be slight discrepencies between how Blender and Dragonframe interpolate between keyframes.")
-    
+    bpy.types.Scene.camera_path_file_name = bpy.props.StringProperty(name="Filename", description = "Filename for Dragonframe raw move file. Will be exported to Blender file directory.", default = "CameraMovement")
+    bpy.types.Scene.moco_export_type = bpy.props.EnumProperty(items = (('0', 'Raw Move', ''), ('1', 'Arc Move', '')), name ="File Type", description = "Type of file to export. Raw Move exports axis positions for each frame, Arc Move exports raw keyframe curves. Arc Move can be edited in Dragonframe, but require axis setup after import. For Arc Move, there be slight discrepancies between how Blender and Dragonframe interpolate between keyframes.")
     bpy.types.Scene.moco_num_axis = bpy.props.IntProperty()
     
     # Custom parameters for each axis slot: component, object string, position
