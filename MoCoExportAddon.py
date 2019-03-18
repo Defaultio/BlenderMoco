@@ -405,6 +405,7 @@ def animationUpdate(scene):
 
 #Class for the panel with input UI
 class View3dPanel(Panel):
+    bl_idname = "OBJECT_PT_moco_export"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_label = 'MoCo Export'
