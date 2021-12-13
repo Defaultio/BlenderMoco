@@ -2,7 +2,7 @@ bl_info = {
     "name": "Motion Control Export Tool",
     "author": "Josh Sheldon",
     "category": "Import-Export",
-    "blender": (2, 7, 9)    
+    "blender": (3, 0, 0)    
 }
 
 import bpy
@@ -407,7 +407,7 @@ def animationUpdate(scene):
 class View3dPanel(Panel):
     bl_idname = "OBJECT_PT_moco_export"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_label = 'MoCo Export'
     bl_context = 'objectmode'
     bl_category = 'MoCo Export'
@@ -456,9 +456,9 @@ class View3dPanel(Panel):
         layout.separator()
     
     
-        layout.label(text="Axis Definitions", icon = 'MANIPUL')
+        layout.label(text="Axis Definitions", icon = 'WORKSPACE')
         row = layout.row()
-        row.operator('moco.addmovementaxis', text = 'Add New MoCo Axis', icon = 'ZOOMIN')
+        row.operator('moco.addmovementaxis', text = 'Add New MoCo Axis', icon = 'ZOOM_IN')
         
         # All the axis slots
         for i in range(props.moco_num_axis):
