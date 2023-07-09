@@ -2,7 +2,7 @@ bl_info = {
     "name": "Motion Control Export Tool",
     "author": "Josh Sheldon",
     "category": "Import-Export",
-    "blender": (3, 0, 0)    
+    "blender": (3, 0, 0)
 }
 
 import bpy
@@ -69,7 +69,7 @@ class ExportMovement(Operator):
                 exportingCameraMovement = False
                 return {'FINISHED'}
             
-            context.scene.update()
+            bpy.context.view_layer.update()
             
             for axis in range(props.moco_num_axis):
                 position = getAxisInputPosition(axis)
@@ -159,7 +159,7 @@ class ExportMovement(Operator):
                 self.positions.append([])
                 
             wm = context.window_manager
-            self._timer = wm.event_timer_add(0.05, context.window)
+            self._timer = wm.event_timer_add(time_step = 0.05, window = context.window)
             wm.modal_handler_add(self)
             
             return {'RUNNING_MODAL'}
@@ -400,7 +400,7 @@ def animationUpdate(scene):
     global props
     props = scene
     updateObjectPositions()
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
 
 #Class for the panel with input UI
@@ -416,7 +416,9 @@ class View3dPanel(Panel):
     
     # Custom parameters for moco pos, filepath, num axis in use
     bpy.types.Scene.camera_path_file_name = bpy.props.StringProperty(name="Filename", description = "Filename for Dragonframe raw move file. Will be exported to Blender file directory.", default = "CameraMovement")
+    
     bpy.types.Scene.moco_export_type = bpy.props.EnumProperty(items = (('0', 'Raw Move', ''), ('1', 'Arc Move', '')), name ="File Type", description = "Type of file to export. Raw Move exports axis positions for each frame, Arc Move exports raw keyframe curves. Arc Move can be edited in Dragonframe, but require axis setup after import. For Arc Move, there be slight discrepancies between how Blender and Dragonframe interpolate between keyframes.")
+    
     bpy.types.Scene.moco_num_axis = bpy.props.IntProperty()
     
     # Custom parameters for each axis slot: component, object string, position
@@ -452,13 +454,13 @@ class View3dPanel(Panel):
         
         # Axis definitions
         row = layout.row()
-        row.operator("wm.url_open", text="Info", icon = 'QUESTION').url = "https://github.com/Defaultio/BlenderMoco"
+        row.operator("wm.url_open", text = "Info", icon = 'QUESTION').url = "https://github.com/Defaultio/BlenderMoco"
         layout.separator()
     
     
-        layout.label(text="Axis Definitions", icon = 'WORKSPACE')
+        layout.label(text = "Axis Definitions", icon = 'PARTICLES')
         row = layout.row()
-        row.operator('moco.addmovementaxis', text = 'Add New MoCo Axis', icon = 'ZOOM_IN')
+        row.operator('moco.addmovementaxis', text = 'Add New MoCo Axis', icon = 'ADD')
         
         # All the axis slots
         for i in range(props.moco_num_axis):
@@ -504,7 +506,7 @@ class View3dPanel(Panel):
      
         # Camera export filepath and button
         layout.separator()
-        layout.label(text="File export", icon = 'FILE_TEXT')
+        layout.label(text="File export", icon = 'EXPORT')
         row = layout.row(align=True)
         row.prop(context.scene, "frame_start")
         row.prop(context.scene, "frame_end")
